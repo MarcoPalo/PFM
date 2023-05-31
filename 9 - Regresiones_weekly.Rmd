@@ -1,0 +1,68 @@
+---
+title: "Regresiones weekly"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+bibliography: references.bib
+---
+
+# ABRIR DATASET Y PANEL DATA
+
+```{r abrir_dataset, echo=FALSE}
+require(readxl)
+panel = read_excel('./data/weekly_final.xlsx')
+head(panel)
+```
+
+```{r convertir_paneldata, include=FALSE}
+require(plm)
+pdata = pdata.frame(panel,index=c("region","date"),drop.index=FALSE,row.names = TRUE)
+head(pdata)
+```
+
+```{r explorar_estructura, echo=FALSE}
+pdim(pdata)
+```
+
+```{r identificar_variables_inalteradas, echo=FALSE}
+pvar(pdata)
+```
+
+```{r librería y cambiar a numeric la fecha, include=FALSE}
+require(stargazer)
+pdata$date = as.numeric(pdata$date)
+# si no cambiamos a numeric la fecha nos la toma como categorical
+```
+
+# POSITIVE SONGS - COVID
+
+```{r}
+ra1 = plm(positive_songs_p~stringency_index, data=pdata, model= "random")
+ra2 = plm(positive_songs_p~containment, data=pdata, model= "random")
+ra3 = plm(positive_songs_p~response, data=pdata, model= "random")
+ra4 = plm(positive_songs_p~support, data=pdata, model= "random")
+ra5 = plm(positive_songs_p~new_cases_per_million, data=pdata, model= "random")
+ra6 = plm(positive_songs_p~icu_patients_per_million, data=pdata, model= "random")
+wi7 = plm(positive_songs_p~covid, data=pdata, model= "within")
+
+stargazer(ra1, ra2, ra3, ra4, ra5, ra6, wi7, type = 'latex')
+```
+
+```{r}
+wi1 = plm(positive_songs_p~stringency_index, data=pdata, model= "within")
+wi2 = plm(positive_songs_p~containment, data=pdata, model= "within")
+wi3 = plm(positive_songs_p~response, data=pdata, model= "within")
+wi4 = plm(positive_songs_p~support, data=pdata, model= "within")
+wi5 = plm(positive_songs_p~new_cases_per_million, data=pdata, model= "within")
+wi6 = plm(positive_songs_p~icu_patients_per_million, data=pdata, model= "within")
+ra7 = plm(positive_songs_p~covid, data=pdata, model= "random")
+
+phtest(wi1, ra1)
+phtest(wi2, ra2)
+phtest(wi3, ra3)
+phtest(wi4, ra4)
+phtest(wi5, ra5)
+phtest(wi6, ra6)
+phtest(wi7, ra7)
+```

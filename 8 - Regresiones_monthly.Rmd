@@ -1,0 +1,178 @@
+---
+title: "Regresiones_final"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+bibliography: references.bib
+---
+
+# ABRIR DATASET Y PANEL DATA
+
+```{r abrir_dataset, echo=FALSE}
+require(readxl)
+rm(list = ls())
+panel = read_excel('.data/panel_final2.xlsx')
+head(panel)
+```
+
+```{r convertir_paneldata, include=FALSE}
+require(plm)
+pdata = pdata.frame(panel,index=c("region","date"),drop.index=FALSE,row.names = TRUE)
+head(pdata)
+```
+
+```{r explorar_estructura, echo=FALSE}
+pdim(pdata)
+```
+
+```{r identificar_variables_inalteradas, echo=FALSE}
+pvar(pdata)
+```
+
+# REGRESIONES
+
+```{r librería y cambiar a numeric la fecha, include=FALSE}
+require(stargazer)
+pdata$date = as.numeric(pdata$date)
+# si no cambiamos a numeric la fecha nos la toma como categorical
+```
+
+# Resultados para paper
+
+### Ponderated Positive Songs
+
+###### Regresiones
+
+```{r}
+wi1 = plm(positive_songs_p~unemp, data=pdata, model= "within")
+ra2 = plm(positive_songs_p~inflation, data=pdata, model= "random") 
+ra3 = plm(positive_songs_p~stringency_index, data=pdata, model= "random")
+wi4 = plm(positive_songs_p~unemp + inflation, data=pdata, model= "within")
+wi5 = plm(positive_songs_p~unemp + stringency_index, data=pdata, model= "within")
+wi6 = plm(positive_songs_p~unemp + stringency_index + inflation, data=pdata, model= "within")
+
+stargazer(wi1, ra2, ra3, wi4, wi5, wi6, type = 'latex')
+```
+
+###### Test de Hausman
+
+```{r}
+ra1 = plm(positive_songs_p~unemp, data=pdata, model= "random")
+wi2 = plm(positive_songs_p~inflation, data=pdata, model= "within") 
+wi3 = plm(positive_songs_p~stringency_index, data=pdata, model= "within")
+ra4 = plm(positive_songs_p~unemp + inflation, data=pdata, model= "random")
+ra5 = plm(positive_songs_p~unemp + stringency_index, data=pdata, model= "random")
+ra6 = plm(positive_songs_p~unemp + stringency_index + inflation, data=pdata, model= "random")
+phtest(wi1, ra1)
+phtest(wi2, ra2)
+phtest(wi3, ra3)
+phtest(wi4, ra4)
+phtest(wi5, ra5)
+phtest(wi6, ra6)
+```
+
+### Alternative measures
+
+###### Regresiones
+
+```{r}
+wi7 = plm(positive_percen~unemp + inflation + stringency_index, data=pdata, model= "within")
+wi8 = plm(negative_songs_p~unemp + inflation + stringency_index, data=pdata, model= "within")
+wi9 = plm(neto_songs~unemp + inflation + stringency_index, data=pdata, model= "within")
+wi10 = plm(positive_songs_p_yt~unemp + inflation + stringency_index, data=pdata, model= "within")
+
+stargazer(wi7, wi8, wi9, wi10, type = 'latex')
+```
+
+###### Test de Hausman
+
+```{r}
+ra7 = plm(positive_percen~unemp + stringency_index + inflation, data=pdata, model= "random")
+ra8 = plm(negative_songs_p~unemp + stringency_index + inflation, data=pdata, model= "random")
+ra9 = plm(neto_songs~unemp + stringency_index + inflation, data=pdata, model= "random")
+ra10 = plm(positive_songs_p_yt~unemp + stringency_index + inflation, data=pdata, model= "random")
+
+phtest(wi7, ra7)
+phtest(wi8, ra8)
+phtest(wi9, ra9)
+phtest(wi10, ra10)
+```
+
+### COVID 19
+
+###### Regresiones
+
+```{r}
+wi11 = plm(positive_songs_p~unemp + inflation + containment, data=pdata, model= "within") 
+wi12 = plm(positive_songs_p~unemp + inflation + response, data=pdata, model= "within")
+wi13 = plm(positive_songs_p~unemp + inflation + support, data=pdata, model= "within") 
+wi14 = plm(positive_songs_p~unemp + inflation + new_cases_per_million, data=pdata, model= "within")
+wi15 = plm(positive_songs_p~unemp + inflation + icu_patients_per_million, data=pdata, model= "within")
+wi16 = plm(positive_songs_p~unemp  + inflation + covid, data=pdata, model= "within")
+
+stargazer(wi11, wi12, wi13, wi14, wi15, wi16, type = 'latex')
+```
+
+###### Test de Hausman
+
+```{r}
+ra11 = plm(positive_songs_p~unemp + inflation  + containment, data=pdata, model= "random") 
+ra12 = plm(positive_songs_p~unemp + inflation + response, data=pdata, model= "random")
+ra13 = plm(positive_songs_p~unemp + inflation + support, data=pdata, model= "random") 
+ra14 = plm(positive_songs_p~unemp + inflation + new_cases_per_million, data=pdata, model= "random")
+ra15 = plm(positive_songs_p~unemp + inflation + icu_patients_per_million, data=pdata, model= "random")
+ra16 = plm(positive_songs_p~unemp  + inflation + covid, data=pdata, model= "random")
+
+phtest(wi11, ra11)
+phtest(wi12, ra12)
+phtest(wi13, ra13)
+phtest(wi14, ra14)
+phtest(wi15, ra15)
+phtest(wi16, ra16)
+```
+
+### Additional robustness and subsets
+
+###### Regresiones
+
+```{r}
+wi32 = plm(positive_songs_p~unemp + inflation + stringency_index + christmas, data=pdata, model= "within")
+wi33 = plm(top10~unemp + inflation + stringency_index, data=pdata, model= "within")
+wi34 = plm(top100~unemp + inflation + stringency_index, data=pdata, model= "within")
+
+
+stargazer(wi32, wi33, wi34, type = 'latex')
+```
+
+```{r}
+ra32 = plm(positive_songs_p~unemp + stringency_index + inflation + christmas, data=pdata, model= "random")
+ra33 = plm(top10~unemp + stringency_index + inflation, data=pdata, model= "random")
+ra34 = plm(top100~unemp + stringency_index + inflation, data=pdata, model= "random")
+
+
+phtest(wi32, ra32)
+phtest(wi33, ra33)
+phtest(wi34, ra34)
+```
+
+```{r}
+wi32 = plm(over5~unemp + stringency_index + inflation, data=pdata, model= "within")
+wi33 = plm(over10~unemp + stringency_index + inflation, data=pdata, model= "within")
+wi34 = plm(over15~unemp + stringency_index + inflation, data=pdata, model= "within")
+wi35 = plm(over20~unemp + stringency_index + inflation, data=pdata, model= "within")
+wi36 = plm(under5~unemp + stringency_index + inflation, data=pdata, model= "within")
+wi37 = plm(under10~unemp + stringency_index + inflation, data=pdata, model= "within")
+
+stargazer(wi32, wi33, wi34, wi35, wi36, wi37, type = 'latex')
+```
+
+```{r}
+stargazer( wi36, wi37, type = 'text')
+```
+
+```{r}
+wi38 = plm(valence~unemp + stringency_index + inflation, data=pdata, model= "within")
+wi39 = plm(posval~unemp + stringency_index + inflation, data=pdata, model= "within")
+stargazer( wi38, wi39, type = 'text')
+```
